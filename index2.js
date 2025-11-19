@@ -1,5 +1,9 @@
 const data = { h1: "To do list", input: "", button: "Submit", h2: "To do items", li: [] };
 // [type, value || children, handlers]
+
+let oldVirtualDom,
+children;
+
 function virtualDom() {
     return [
         ["h1", data["h1"]],
@@ -20,10 +24,33 @@ function virtualDom() {
     ];
 };
 
-function renderDom () {
-    const children = virtualDom().map(renderDomElement);
+function diffAlgorithm(oldVirtualDom,newVirtualDom,children) {
+newVirtualDom.forEach((element,index)=> {
+    if(JSON.stringify(element)!==JSON.stringify(oldVirtualDom[index])){
+const [type,value,handler] = element
+ if(Array.isArray(value)){
+    if(type==="ul"){
+     children[index].appendChild(renderDomElement(value[value.length-1]))
+    }else{
+    diffAlgorithm(oldVirtualDom[index][1],value,children[index].children)
+    }
+ }else{
+ children[index].value = value;
+ children[index].textContent = value;
+ }
+    }
+})
 
-    document.body.replaceChildren(...children);
+}
+
+function renderDom () {
+    if(!oldVirtualDom){
+        children = virtualDom().map(renderDomElement);
+        oldVirtualDom = virtualDom();
+        document.body.replaceChildren(...children);
+    }else{
+diffAlgorithm(oldVirtualDom,virtualDom(),children);
+    }
 }
 
 function renderDomElement (item) {
